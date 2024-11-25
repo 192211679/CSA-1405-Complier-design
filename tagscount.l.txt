@@ -1,0 +1,25 @@
+%{
+#include <stdio.h>
+%}
+
+%%
+
+\<[^>]*\>   { printf("%s\n", yytext); }   // Display matched HTML tags
+.|\n;        // Ignore other characters (e.g., content outside of tags)
+
+%%
+
+int yywrap() {
+    return 1;  // End of file handling
+}
+
+int main() {
+    yyin = fopen("sample.html", "r");   // Open the input file
+    if (!yyin) {                         // Check if file opening succeeded
+        perror("Error opening file");
+        return 1;
+    }
+    
+    yylex();                             // Start lexical analysis
+    return 0;
+}

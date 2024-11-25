@@ -1,0 +1,50 @@
+%{
+#include <stdio.h>
+%}
+DIGIT       [0-9]
+LETTER      [a-zA-Z]
+ID          {LETTER}({LETTER}|{DIGIT})*
+NUM         {DIGIT}+
+WS          [ \t\n]+
+
+%%
+
+"include"   { printf("<INCLUDE, %s>\n", yytext); }
+"void"      { printf("<VOID, %s>\n", yytext); }
+"int"       { printf("<INT, %s>\n", yytext); }
+"printf"    { printf("<PRINTF, %s>\n", yytext); }
+"main"      { printf("<MAIN, %s>\n", yytext); }
+"{"         { printf("<LEFT_BRACE, %s>\n", yytext); }
+"}"         { printf("<RIGHT_BRACE, %s>\n", yytext); }
+"="         { printf("<ASSIGN, %s>\n", yytext); }
+","         { printf("<COMMA, %s>\n", yytext); }
+";"         { printf("<SEMICOLON, %s>\n", yytext); }
+"\""        { printf("<QUOTE, %s>\n", yytext); }
+"("         { printf("<LEFT_PAREN, %s>\n", yytext); }
+")"         { printf("<RIGHT_PAREN, %s>\n", yytext); }
+{ID}        { printf("<IDENTIFIER, %s>\n", yytext); }
+{NUM}       { printf("<NUMBER, %s>\n", yytext); }
+{WS}        ;   // ignore whitespace
+
+.           { printf("<UNKNOWN, %s>\n", yytext); }
+
+%%
+
+int main() {
+    yyin = fopen("sample.c", "r");
+    yylex();
+    fclose(yyin);
+    return 0;
+}
+int yywrap()
+{
+ return 1;
+}
+
+Sample.c
+#include<stdio.h> 
+void main()
+{
+int a,b,c = 30; 
+printf("hello");
+}

@@ -1,0 +1,35 @@
+%{
+#include <stdio.h>
+int comment_count = 0; // To count comment lines
+FILE *output_file;     // For writing cleaned code
+%}
+
+%%
+"//".*                 { comment_count++; } /* Count single-line comments and skip them */
+"/*"([^*]|\*+[^*/])*\*/ { comment_count++; } /* Count multi-line comments and skip them */
+.|\n                   { fputc(yytext[0], output_file); } /* Write everything else to the output */
+%%
+
+int main() {
+    FILE *input_file = fopen("input.c", "r"); // Open input file
+    output_file = fopen("output.c", "w");    // Open output file
+
+    if (!input_file || !output_file) {
+        printf("Error opening files!\n");
+        return 1;
+    }
+
+    yyin = input_file; // Set input file for lexical analysis
+    yylex();           // Process the input
+
+    fclose(input_file); // Close files
+    fclose(output_file);
+
+    printf("Number of comment lines: %d\n", comment_count);
+    printf("Cleaned code written to 'output.c'\n");
+    return 0;
+}
+
+int yywrap() {
+    return 1;
+}
