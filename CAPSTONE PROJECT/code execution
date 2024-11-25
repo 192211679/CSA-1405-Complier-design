@@ -1,0 +1,167 @@
+#include <stdio.h>   // For printf and scanf
+#include <stdlib.h>  // For malloc and free
+#include <limits.h>  // For INT_MIN
+
+#define MAX_NODES 100 // Define MAX_NODES for the longestPath function
+
+typedef struct Node {
+    int vertex;
+    int weight;
+    struct Node* next;
+} Node;
+
+typedef struct Graph {
+    int numVertices;
+    Node** adjLists;
+    int* visited;
+} Graph;
+
+Node* createNode(int v, int weight) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->vertex = v;
+    newNode->weight = weight;
+    newNode->next = NULL;
+    return newNode;
+}
+
+Graph* createGraph(int vertices) {
+    Graph* graph = (Graph*)malloc(sizeof(Graph));
+    graph->numVertices = vertices;
+    graph->adjLists = (Node*)malloc(vertices * sizeof(Node));
+    graph->visited = (int*)malloc(vertices * sizeof(int));
+    for (int i = 0; i < vertices; i++) {
+        graph->adjLists[i] = NULL;
+        graph->visited[i] = 0;
+    }
+    return graph;
+}
+
+void addEdge(Graph* graph, int src, int dest, int weight) {
+    Node* newNode = createNode(dest, weight);
+    newNode->next = graph->adjLists[src];
+    graph->adjLists[src] = newNode;
+}
+
+void topologicalSortUtil(Graph* graph, int v, int* stack, int* stackIndex) {
+    graph->visited[v] = 1;
+    Node* temp = graph->adjLists[v];
+    while (temp != NULL) {
+        int connectedVertex = temp->vertex;
+        if (!graph->visited[connectedVertex]) {
+            topologicalSortUtil(graph, connectedVertex, stack, stackIndex);
+        }
+        temp = temp->next;
+    }
+    stack[(*stackIndex)++] = v;
+}
+
+void topologicalSort(Graph* graph, int* stack) {
+    int stackIndex = 0;
+    for (int i = 0; i < graph->numVertices; i++) {
+        graph->visited[i] = 0;
+    }
+    for (int i = 0; i < graph->numVertices; i++) {
+        if (!graph->visited[i]) {
+            topologicalSortUtil(graph, i, stack, &stackIndex);
+        }
+    }
+    printf("Topological Sort: ");
+    for (int i = stackIndex - 1; i >= 0; i--) {
+        printf("%d ", stack[i]);
+    }
+    printf("\n");
+}
+
+void longestPath(Graph* graph, int startVertex) {
+    int dist[MAX_NODES];
+    int stack[MAX_NODES];
+    for (int i = 0; i < graph->numVertices; i++) {
+        dist[i] = INT_MIN;
+    }
+    dist[startVertex] = 0;
+    topologicalSort(graph, stack);
+    for (int i = 0; i < graph->numVertices; i++) {
+        int u = stack[i];
+        if (dist[u] != INT_MIN) {
+            Node* temp = graph->adjLists[u];
+            while (temp != NULL) {
+                int v = temp->vertex;
+                if (dist[v] < dist[u] + temp->weight) {
+                    dist[v] = dist[u] + temp->weight;
+                }
+                temp = temp->next;
+            }
+        }
+    }
+    printf("Longest paths from vertex %d:\n", startVertex);
+    for (int i = 0; i < graph->numVertices; i++) {
+        if (dist[i] == INT_MIN) {
+            printf("Vertex %d: No path\n", i);
+        } else {
+            printf("Vertex %d: %d\n", i, dist[i]);
+        }
+    }
+}
+
+int detectCycleUtil(Graph* graph, int v, int* recStack) {
+    if (!graph->visited[v]) {
+        graph->visited[v] = 1;
+        recStack[v] = 1;
+        Node* temp = graph->adjLists[v];
+        while (temp != NULL) {
+            int connectedVertex = temp->vertex;
+            if (!graph->visited[connectedVertex] && detectCycleUtil(graph, connectedVertex, recStack)) {
+                return 1;
+            } else if (recStack[connectedVertex]) {
+                return 1;
+            }
+            temp = temp->next;
+        }
+    }
+    recStack[v] = 0;
+    return 0;
+}
+
+int detectCycle(Graph* graph) {
+    int recStack[MAX_NODES] = {0};
+    for (int i = 0; i < graph->numVertices; i++) {
+        graph->visited[i] = 0;
+    }
+    for (int i = 0; i < graph->numVertices; i++) {
+        if (detectCycleUtil(graph, i, recStack)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int vertices, edges;
+    printf("Enter the number of vertices: ");
+    scanf("%d", &vertices);
+    Graph* graph = createGraph(vertices);
+    printf("Enter the number of edges: ");
+    scanf("%d", &edges);
+    printf("Enter the edges in the format (src dest weight):\n");
+    for (int i = 0; i < edges; i++) {
+        int src, dest, weight;
+        scanf("%d %d %d", &src, &dest, &weight);
+        addEdge(graph, src, dest, weight);
+    }
+    if (detectCycle(graph)) {
+        printf("Graph has a cycle!\n");
+    } else {
+        printf("Graph has no cycle.\n");
+        int stack[MAX_NODES];
+        topologicalSort(graph, stack);
+        int startVertex;
+        printf("Enter the starting vertex for longest path calculation: ");
+        scanf("%d", &startVertex);
+        longestPath(graph, startVertex);
+    }
+    return 0;
+}
+
+
+
+
